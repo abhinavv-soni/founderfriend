@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Calendar, Clock, DollarSign, Book, CheckSquare, FileText, PlusCircle, ChevronRight } from 'lucide-react';
+import { Calendar, Clock, DollarSign, Book, CheckSquare, FileText, PlusCircle, ChevronRight, Trash2 } from 'lucide-react';
 import './App.css';
 
 // Components for different sections
@@ -13,6 +13,10 @@ const Journal = ({ entries, setEntries }) => {
       setEntries([entry, ...entries]);
       setNewEntry({ title: '', content: '', date: '' });
     }
+  };
+
+  const deleteEntry = (id) => {
+    setEntries(entries.filter(entry => entry.id !== id));
   };
 
   return (
@@ -93,6 +97,16 @@ const Journal = ({ entries, setEntries }) => {
                 </div>
               </div>
               <p className="mt-3 text-gray-600 whitespace-pre-line">{entry.content}</p>
+              <div className="mt-4 flex justify-end">
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() => deleteEntry(entry.id)}
+                  className="text-red-500 hover:text-red-600 p-2 rounded-full hover:bg-red-50"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </motion.button>
+              </div>
             </motion.div>
           ))}
         </AnimatePresence>
@@ -110,6 +124,10 @@ const Tasks = ({ tasks, setTasks }) => {
       setTasks([task, ...tasks]);
       setNewTask({ title: '', status: 'todo' });
     }
+  };
+
+  const deleteTask = (id) => {
+    setTasks(tasks.filter(task => task.id !== id));
   };
 
   const moveTask = (taskId, newStatus) => {
@@ -193,7 +211,17 @@ const Tasks = ({ tasks, setTasks }) => {
                       exit={{ opacity: 0, scale: 0.95 }}
                       className="bg-white border border-gray-200 p-3 rounded-lg shadow-sm hover:shadow-md transition-shadow"
                     >
-                      <p className="font-medium text-gray-900">{task.title}</p>
+                      <div className="flex justify-between items-start">
+                        <p className="font-medium text-gray-900">{task.title}</p>
+                        <motion.button
+                          whileHover={{ scale: 1.02 }}
+                          whileTap={{ scale: 0.98 }}
+                          onClick={() => deleteTask(task.id)}
+                          className="text-red-500 hover:text-red-600 p-1 rounded-full hover:bg-red-50 ml-2"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </motion.button>
+                      </div>
                       <div className="flex flex-wrap gap-2 mt-3">
                         {status !== 'todo' && (
                           <motion.button
@@ -246,6 +274,10 @@ const Notes = ({ notes, setNotes }) => {
       setNotes([note, ...notes]);
       setNewNote({ title: '', content: '' });
     }
+  };
+
+  const deleteNote = (id) => {
+    setNotes(notes.filter(note => note.id !== id));
   };
 
   return (
@@ -316,6 +348,16 @@ const Notes = ({ notes, setNotes }) => {
                 </div>
               </div>
               <p className="mt-3 text-gray-600">{note.content}</p>
+              <div className="mt-4 flex justify-end">
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() => deleteNote(note.id)}
+                  className="text-red-500 hover:text-red-600 p-2 rounded-full hover:bg-red-50"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </motion.button>
+              </div>
             </motion.div>
           ))}
         </AnimatePresence>
@@ -333,6 +375,10 @@ const Expenses = ({ expenses, setExpenses }) => {
       setExpenses([expense, ...expenses]);
       setNewExpense({ description: '', amount: '', category: '' });
     }
+  };
+
+  const deleteExpense = (id) => {
+    setExpenses(expenses.filter(expense => expense.id !== id));
   };
 
   const total = expenses.reduce((sum, exp) => sum + parseFloat(exp.amount || 0), 0);
