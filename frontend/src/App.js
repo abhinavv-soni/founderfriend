@@ -570,14 +570,24 @@ const Expenses = ({ expenses, setExpenses }) => {
                     year: 'numeric'
                   })}
                 </time>
-                <motion.button
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  onClick={() => deleteExpense(expense.id)}
-                  className="text-red-500 hover:text-red-600 p-2 rounded-full hover:bg-red-50 ml-2"
-                >
-                  <Trash2 className="w-4 h-4" />
-                </motion.button>
+                <div className="flex space-x-2">
+                  <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={() => startEditing(expense)}
+                    className="text-blue-500 hover:text-blue-600 p-2 rounded-full hover:bg-blue-50"
+                  >
+                    <Edit2 className="w-4 h-4" />
+                  </motion.button>
+                  <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={() => deleteExpense(expense.id)}
+                    className="text-red-500 hover:text-red-600 p-2 rounded-full hover:bg-red-50"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </motion.button>
+                </div>
               </div>
             </motion.div>
           ))}
