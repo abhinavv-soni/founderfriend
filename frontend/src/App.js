@@ -1,22 +1,37 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Calendar, Clock, DollarSign, Book, CheckSquare, FileText, PlusCircle, ChevronRight, Trash2 } from 'lucide-react';
+import { Calendar, Clock, DollarSign, Book, CheckSquare, FileText, PlusCircle, ChevronRight, Trash2, Edit2 } from 'lucide-react';
 import './App.css';
 
 // Components for different sections
 const Journal = ({ entries, setEntries }) => {
   const [newEntry, setNewEntry] = useState({ title: '', content: '', date: '' });
+  const [editingEntry, setEditingEntry] = useState(null);
 
   const addEntry = () => {
     if (newEntry.title && newEntry.content) {
-      const entry = { ...newEntry, id: Date.now(), date: new Date().toISOString() };
-      setEntries([entry, ...entries]);
+      if (editingEntry) {
+        setEntries(entries.map(entry => 
+          entry.id === editingEntry.id 
+            ? { ...entry, title: newEntry.title, content: newEntry.content }
+            : entry
+        ));
+        setEditingEntry(null);
+      } else {
+        const entry = { ...newEntry, id: Date.now(), date: new Date().toISOString() };
+        setEntries([entry, ...entries]);
+      }
       setNewEntry({ title: '', content: '', date: '' });
     }
   };
 
   const deleteEntry = (id) => {
     setEntries(entries.filter(entry => entry.id !== id));
+  };
+
+  const startEditing = (entry) => {
+    setEditingEntry(entry);
+    setNewEntry({ title: entry.title, content: entry.content, date: entry.date });
   };
 
   return (
@@ -97,7 +112,15 @@ const Journal = ({ entries, setEntries }) => {
                 </div>
               </div>
               <p className="mt-3 text-gray-600 whitespace-pre-line">{entry.content}</p>
-              <div className="mt-4 flex justify-end">
+              <div className="mt-4 flex justify-end space-x-2">
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() => startEditing(entry)}
+                  className="text-blue-500 hover:text-blue-600 p-2 rounded-full hover:bg-blue-50"
+                >
+                  <Edit2 className="w-4 h-4" />
+                </motion.button>
                 <motion.button
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
@@ -117,17 +140,32 @@ const Journal = ({ entries, setEntries }) => {
 
 const Tasks = ({ tasks, setTasks }) => {
   const [newTask, setNewTask] = useState({ title: '', status: 'todo' });
+  const [editingTask, setEditingTask] = useState(null);
 
   const addTask = () => {
     if (newTask.title) {
-      const task = { ...newTask, id: Date.now() };
-      setTasks([task, ...tasks]);
+      if (editingTask) {
+        setTasks(tasks.map(task => 
+          task.id === editingTask.id 
+            ? { ...task, title: newTask.title }
+            : task
+        ));
+        setEditingTask(null);
+      } else {
+        const task = { ...newTask, id: Date.now() };
+        setTasks([task, ...tasks]);
+      }
       setNewTask({ title: '', status: 'todo' });
     }
   };
 
   const deleteTask = (id) => {
     setTasks(tasks.filter(task => task.id !== id));
+  };
+
+  const startEditing = (task) => {
+    setEditingTask(task);
+    setNewTask({ title: task.title, status: task.status });
   };
 
   const moveTask = (taskId, newStatus) => {
@@ -213,14 +251,24 @@ const Tasks = ({ tasks, setTasks }) => {
                     >
                       <div className="flex justify-between items-start">
                         <p className="font-medium text-gray-900">{task.title}</p>
-                        <motion.button
-                          whileHover={{ scale: 1.02 }}
-                          whileTap={{ scale: 0.98 }}
-                          onClick={() => deleteTask(task.id)}
-                          className="text-red-500 hover:text-red-600 p-1 rounded-full hover:bg-red-50 ml-2"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </motion.button>
+                        <div className="flex space-x-1">
+                          <motion.button
+                            whileHover={{ scale: 1.02 }}
+                            whileTap={{ scale: 0.98 }}
+                            onClick={() => startEditing(task)}
+                            className="text-blue-500 hover:text-blue-600 p-1 rounded-full hover:bg-blue-50"
+                          >
+                            <Edit2 className="w-4 h-4" />
+                          </motion.button>
+                          <motion.button
+                            whileHover={{ scale: 1.02 }}
+                            whileTap={{ scale: 0.98 }}
+                            onClick={() => deleteTask(task.id)}
+                            className="text-red-500 hover:text-red-600 p-1 rounded-full hover:bg-red-50"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </motion.button>
+                        </div>
                       </div>
                       <div className="flex flex-wrap gap-2 mt-3">
                         {status !== 'todo' && (
@@ -267,17 +315,32 @@ const Tasks = ({ tasks, setTasks }) => {
 
 const Notes = ({ notes, setNotes }) => {
   const [newNote, setNewNote] = useState({ title: '', content: '' });
+  const [editingNote, setEditingNote] = useState(null);
 
   const addNote = () => {
     if (newNote.title && newNote.content) {
-      const note = { ...newNote, id: Date.now() };
-      setNotes([note, ...notes]);
+      if (editingNote) {
+        setNotes(notes.map(note => 
+          note.id === editingNote.id 
+            ? { ...note, title: newNote.title, content: newNote.content }
+            : note
+        ));
+        setEditingNote(null);
+      } else {
+        const note = { ...newNote, id: Date.now() };
+        setNotes([note, ...notes]);
+      }
       setNewNote({ title: '', content: '' });
     }
   };
 
   const deleteNote = (id) => {
     setNotes(notes.filter(note => note.id !== id));
+  };
+
+  const startEditing = (note) => {
+    setEditingNote(note);
+    setNewNote({ title: note.title, content: note.content });
   };
 
   return (
@@ -348,7 +411,15 @@ const Notes = ({ notes, setNotes }) => {
                 </div>
               </div>
               <p className="mt-3 text-gray-600">{note.content}</p>
-              <div className="mt-4 flex justify-end">
+              <div className="mt-4 flex justify-end space-x-2">
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() => startEditing(note)}
+                  className="text-blue-500 hover:text-blue-600 p-2 rounded-full hover:bg-blue-50"
+                >
+                  <Edit2 className="w-4 h-4" />
+                </motion.button>
                 <motion.button
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
@@ -368,17 +439,36 @@ const Notes = ({ notes, setNotes }) => {
 
 const Expenses = ({ expenses, setExpenses }) => {
   const [newExpense, setNewExpense] = useState({ description: '', amount: '', category: '' });
+  const [editingExpense, setEditingExpense] = useState(null);
 
   const addExpense = () => {
     if (newExpense.description && newExpense.amount) {
-      const expense = { ...newExpense, id: Date.now(), date: new Date().toISOString() };
-      setExpenses([expense, ...expenses]);
+      if (editingExpense) {
+        setExpenses(expenses.map(expense => 
+          expense.id === editingExpense.id 
+            ? { ...expense, description: newExpense.description, amount: newExpense.amount, category: newExpense.category }
+            : expense
+        ));
+        setEditingExpense(null);
+      } else {
+        const expense = { ...newExpense, id: Date.now(), date: new Date().toISOString() };
+        setExpenses([expense, ...expenses]);
+      }
       setNewExpense({ description: '', amount: '', category: '' });
     }
   };
 
   const deleteExpense = (id) => {
     setExpenses(expenses.filter(expense => expense.id !== id));
+  };
+
+  const startEditing = (expense) => {
+    setEditingExpense(expense);
+    setNewExpense({ 
+      description: expense.description, 
+      amount: expense.amount, 
+      category: expense.category 
+    });
   };
 
   const total = expenses.reduce((sum, exp) => sum + parseFloat(exp.amount || 0), 0);
