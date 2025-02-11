@@ -1,0 +1,135 @@
+FROM python:3.11-slim as python-builder
+
+# Install only the necessary build dependencies
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Poetry and add to PATH
+ENV POETRY_VERSION=1.7.0 \
+    POETRY_VIRTUALENVS_CREATE=false \
+    POETRY_NO_INTERACTION=1 \
+    PATH="/root/.local/bin:$PATH"
+
+RUN curl -sSL https://install.python-poetry.org | python3 -
+
+# Copy only dependency files first
+WORKDIR /app/backend
+COPY backend/poetry.lock backend/pyproject.toml ./
+
+# Install dependencies
+RUN poetry install --no-root --no-dev
+
+# Final stage
+FROM python:3.11-slim
+
+ENV PYTHONUNBUFFERED=1 \
+    DEBIAN_FRONTEND=noninteractive \
+    POETRY_VERSION=1.7.0 \
+    POETRY_VIRTUALENVS_CREATE=false \
+    POETRY_NO_INTERACTION=1 \
+    NEXT_TELEMETRY_DISABLED=1 \
+    PATH="/root/.local/bin:$PATH"
+
+RUN apt-get update && apt-get install --no-install-recommends -y \
+        openssh-server \
+        supervisor \
+        curl \
+        wget \
+        sudo \
+        git
+
+# Install system dependencies, Node.js, and MongoDB in a single layer
+RUN curl -fsSL https://deb.nodesource.com/setup_18.x | bash - && \
+    # Add MongoDB repository
+    wget -qO - https://www.mongodb.org/static/pgp/server-7.0.asc | gpg --dearmor > /etc/apt/trusted.gpg.d/mongodb-7.0.gpg && \
+    echo "deb [ arch=amd64,arm64 ] https://repo.mongodb.org/apt/ubuntu jammy/mongodb-org/7.0 multiverse" | tee /etc/apt/sources.list.d/mongodb-org-7.0.list && \
+    apt-get update && \
+    apt-get install --no-install-recommends -y \
+        nodejs \
+        mongodb-org \
+        # Playwright dependencies
+        libnss3 \
+        libatk-bridge2.0-0 \
+        libdrm2 \
+        libxkbcommon0 \
+        libgbm1 \
+        libasound2 \
+        # Cleanup
+        && apt-get clean \
+        && rm -rf /var/lib/apt/lists/* \
+        && mkdir -p /data/db \
+        && chown -R root:root /data/db
+
+
+# Install global Node.js packages
+RUN npm install -g yarn
+
+# Copy Python dependencies from builder
+COPY --from=python-builder /usr/local/lib/python3.11/site-packages /usr/local/lib/python3.11/site-packages
+
+# Install Poetry, Playwright, and code-server
+RUN pip install playwright && \
+    playwright install chromium --with-deps && \
+    curl -fsSL https://code-server.dev/install.sh | sh && \
+    code-server --install-extension ms-python.python
+
+# Set up application
+WORKDIR /app
+COPY . .
+COPY scripts /app/scripts
+COPY .devcontainer/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+
+# Install frontend dependencies
+WORKDIR /app/frontend
+RUN yarn install --frozen-lockfile
+
+# Install backend dependencies
+WORKDIR /app/backend
+RUN curl -sSL https://install.python-poetry.org | python3 -
+RUN poetry install --no-root
+
+# Back to app root
+WORKDIR /app
+
+# Set permissions
+RUN chmod +x .devcontainer/entrypoint.sh
+
+# Final cleanup of all caches and temporary files
+RUN set -ex; \
+    # APT cleanup
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/* && \
+    rm -rf /var/cache/apt/* && \
+    # Repository and GPG cleanup
+    rm -rf /etc/apt/trusted.gpg.d/mongodb-7.0.gpg && \
+    rm -rf /etc/apt/sources.list.d/mongodb-org-7.0.list && \
+    rm -rf /etc/apt/sources.list.d/nodesource.list && \
+    # MongoDB cleanup
+    rm -rf /var/lib/mongodb/* && \
+    rm -rf /var/log/mongodb/* && \
+    # Node.js/npm/yarn cleanup
+    npm cache clean --force && \
+    rm -rf /root/.npm/* && \
+    yarn cache clean && \
+    rm -rf /root/.cache/yarn/* && \
+    # Python/pip/poetry cleanup
+    rm -rf /root/.cache/pip/* && \
+    rm -rf /root/.cache/pypoetry/* && \
+    # Code-server cleanup
+    rm -rf /root/.cache/code-server/* && \
+    rm -rf /root/.cache/ms-python/* && \
+    rm -rf /root/.local/share/code-server/CachedExtensionVSIXs/* && \
+    # General cleanup
+    rm -rf /tmp/* && \
+    # Ensure MongoDB data directory exists
+    mkdir -p /data/db && \
+    chown -R root:root /data/db
+
+
+# Expose ports
+EXPOSE 3000 8001 22 8080 27017
+EXPOSE 55000-55999
+
+ENTRYPOINT [".devcontainer/entrypoint.sh"]

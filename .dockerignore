@@ -1,0 +1,40 @@
+# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+*.idea/*
+dist
+# dependencies
+*node_modules*
+/.pnp
+.pnp.js
+.yarn/install-state.gz
+*.vscode*
+# testing
+/coverage
+dump.rdb
+chainlit.md
+.chainlit
+# next.js
+*/.next/*
+/out/
+.ipynb_checkpoints/
+# production
+
+# misc
+.DS_Store
+*.pem
+
+# debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# local env files
+.env*.local
+*token.json*
+
+# typescript
+*.tsbuildinfo*
+*pyc*
+
+*venv/*
+*.venv/*
+*__pycache__/*
