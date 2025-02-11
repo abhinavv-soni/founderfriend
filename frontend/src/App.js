@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Calendar, Clock, DollarSign, Book, CheckSquare, FileText, PlusCircle, ChevronRight, Trash2, Edit2 } from 'lucide-react';
+import { Calendar, Clock, DollarSign, Book, CheckSquare, FileText, PlusCircle, Trash2, Edit2 } from 'lucide-react';
 import './App.css';
 
 // Components for different sections
